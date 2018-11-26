@@ -131,7 +131,7 @@ $(document).ready(function () {
 
 <div id="executive-summary" class="section level2">
 <h2>Executive Summary</h2>
-<p>The primary objective in this course project is to build appropriate prediction model for the Human Activity Recognition (HAR) dataset using concepts learned from the Practical Machine Learning Course. We would like to predict the manner in which the participants of the research did the exercise (“classe” variable). Two approaches were attempted: (1) Random Forest and (2) Boosting. The overall accuracies of the prediction models are ~99% and ~96%, respectively. Thus, it has been identified that the best fit is the model resulting from the Random Forest method.</p>
+<p>The primary objective in this course project is to build appropriate prediction model for the Human Activity Recognition (HAR) dataset using concepts learned from the Practical Machine Learning Course. We would like to predict the manner in which the participants of the research did the exercise (“classe” variable). Two approaches were attempted: (1) Random Forest and (2) Boosting. The overall accuracies of the prediction models are ~99% and ~96%, with estimated out of sample errors ~1% and ~4%, respectively. Thus, it has been identified that the best fit is the model resulting from the Random Forest method.</p>
 </div>
 <div id="the-human-activity-recognition-har-dataset" class="section level2">
 <h2>The Human Activity Recognition (HAR) Dataset</h2>
@@ -256,7 +256,7 @@ confMat_rf$table</code></pre>
 <pre class="r"><code>confMat_rf$overall[1]</code></pre>
 <pre><code>##  Accuracy 
 ## 0.9908233</code></pre>
-<p>The resulting overall accuracy of the prediction is ~99%.</p>
+<p>The resulting overall accuracy of the prediction is ~99%. The estimated out of sample error is then ~1%.</p>
 <div id="using-boosting" class="section level3">
 <h3>Using Boosting</h3>
 <pre class="r"><code>library(gbm)</code></pre>
@@ -305,7 +305,7 @@ confMat_gbm$table</code></pre>
 <pre class="r"><code>confMat_gbm$overall[1]</code></pre>
 <pre><code>##  Accuracy 
 ## 0.9588325</code></pre>
-<p>The resulting overall accuracy of the prediction using Boosting method is ~96%.</p>
+<p>The resulting overall accuracy of the prediction using Boosting method is ~96%. The estimated out of sample error is then ~4%.</p>
 <p>Since the accuracy of the model built using Random Forests method is already high, the combined classifier approach was skipped. It has been settled that the <code>mod_rf</code> model is the best fit for the HAR dataset.</p>
 </div>
 </div>

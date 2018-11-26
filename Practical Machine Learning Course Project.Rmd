@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo=TRUE)
 ```
 
 ##Executive Summary
-The primary objective in this course project is to build appropriate prediction model for the Human Activity Recognition (HAR) dataset using concepts learned from the Practical Machine Learning Course. We would like to predict the manner in which the participants of the research did the exercise ("classe" variable). Two approaches were attempted: (1) Random Forest and (2) Boosting. The overall accuracies of the prediction models are ~99% and ~96%, respectively. Thus, it has been identified that the best fit is the model resulting from the Random Forest method.
+The primary objective in this course project is to build appropriate prediction model for the Human Activity Recognition (HAR) dataset using concepts learned from the Practical Machine Learning Course. We would like to predict the manner in which the participants of the research did the exercise ("classe" variable). Two approaches were attempted: (1) Random Forest and (2) Boosting. The overall accuracies of the prediction models are ~99% and ~96%, with estimated out of sample errors ~1% and ~4%, respectively. Thus, it has been identified that the best fit is the model resulting from the Random Forest method.
 
 
 ## The Human Activity Recognition (HAR) Dataset
@@ -108,7 +108,7 @@ confMat_rf <- confusionMatrix(ptest$classe, predict_rf)
 confMat_rf$table
 confMat_rf$overall[1]
 ```
-The resulting overall accuracy of the prediction is ~99%.
+The resulting overall accuracy of the prediction is ~99%. The estimated out of sample error is then ~1%.
 
 ###Using Boosting
 ```{r Boosting, cache=TRUE}
@@ -118,13 +118,14 @@ mod_gbm
 ```
 Meanwhile, using Boosting, the identified optimal number of trees is 150 with accuracy of ~95%.
 
+
 ```{r}
 predict_gbm <- predict(mod_gbm, ptest)
 confMat_gbm <- confusionMatrix(ptest$classe, predict_gbm)
 confMat_gbm$table
 confMat_gbm$overall[1]
 ```
-The resulting overall accuracy of the prediction using Boosting method is ~96%.
+The resulting overall accuracy of the prediction using Boosting method is ~96%. The estimated out of sample error is then ~4%.
 
 Since the accuracy of the model built using Random Forests method is already high, the combined classifier approach was skipped. It has been settled that the `mod_rf` model is the best fit for the HAR dataset.
 
