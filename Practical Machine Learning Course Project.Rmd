@@ -1,0 +1,145 @@
+---
+title: "Practical Machine Learning Course Project"
+author: "Sheryl Ann B. Vizcara"
+date: "11/25/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+##Executive Summary
+The primary objective in this course project is to build appropriate prediction model for the Human Activity Recognition (HAR) dataset using concepts learned from the Practical Machine Learning Course. We would like to predict the manner in which the participants of the research did the exercise ("classe" variable). Two approaches were attempted: (1) Random Forest and (2) Boosting. The overall accuracies of the prediction models are ~99% and ~96%, respectively. Thus, it has been identified that the best fit is the model resulting from the Random Forest method.
+
+
+## The Human Activity Recognition (HAR) Dataset
+The Human Activity Recognition (HAR) dataset consists of observations collected from accelerometors on the belt, forearm, arm, and dumbell of six (6) male participants (ages 20-28 years), who performed one (1) set of ten (10) repetitions of the Unilateral Dumbbell Biceps Curl in five (5) manners:
+
+recommended:
+
+* Class A - exactly according to the specification
+
+common mistakes:
+
+* Class B - throwing the elbows to the front
+* Class C - lifting the dumbbell only halfway
+* Class D - lowering the dumbbell only halfway
+* Class E - throwing the hips to the front
+
+For the Weight Lifting Exercises (WLE) dataset, the approach was to investigate "how well" an activity was performed by the wearer.
+
+
+##Loading and Preprocessing of Data
+First, we load the data and investigate its contents. 
+
+```{r Load HAR Data}
+trainData <- read.csv('pml-training.csv', header=TRUE, na.strings = c("NA","","#DIV/0!"))
+testData <- read.csv('pml-testing.csv', header=TRUE, na.strings = c("NA","","#DIV/0!"))
+
+dim(trainData)
+dim(testData)
+```
+
+We can see from the results of the `dim` function that the training set and test sets are divided into 19622 observations and 20 observations, respectively, for 160 variables. Since there is a small number of observations for the testData, it has been decided that the trainData would be split it into training (60%) and test (40%) sets. Before proceeding with the partitioning of the data, necessary preprocessing was done.
+
+```{r Look into HAR Dataset, eval=FALSE}
+str(trainData)
+```
+
+Columns 1-7 of contains data about the device and the users so it was excluded from the dataset for the model. It was also observed that some variables have large chunks of missing values (NA and blanks), so instead of imputing, these variables were exvluded from the dataset since they were not expected to contribute anything to the model.
+
+```{r Clean Data}
+library(caret)
+library(ggplot2)
+set.seed(1414)
+filteredData <- trainData[, -c(1:7)]
+columnsWithNoNAs <- which(colSums(is.na(filteredData)) == 0)
+filteredData <- filteredData[columnsWithNoNAs]
+
+dim(filteredData)
+
+#apply also to testSet
+filteredTestData <- testData[,-c(1:7)]
+filteredTestData <- filteredTestData[columnsWithNoNAs]
+```
+After filtering, the dimension of the dataset was reduced to 53 columns/variables.
+
+##Training and Test Sets
+The preprocessed data was split into training and test sets that were 60% and 40% of the data, respectively.
+
+```{r}
+#partition dataset to training and test sets
+inTrain <- createDataPartition(filteredData$classe, p=0.6, list=FALSE)
+training <- filteredData[inTrain,]
+test <- filteredData[-inTrain,]
+```
+
+Preprocessing using `caret` package, i.e., centering and scaling, was then applied to the datasets. The training dataset was also tested for variables with near zero variance (however, test using `nearZeroVar` reported FALSE for all columns so it was decided not to include it in this writeup).
+
+```{r}
+preProcValues <- preProcess(training, method = c("center", "scale"))
+ptraining <- predict(preProcValues, training)
+ptest <- predict(preProcValues, test)
+
+#apply also to filteredTestData
+pTestData <- predict(preProcValues, filteredTestData)
+```
+
+##Building Prediction Models
+Two approaches to train the model: (1) Random Forests (RF) and (2) Boosting (GBM) and the resulting prediction accuracies were then compared.
+###Using Random Forests
+For the random forest method, 5-fold cross-validation has been applied.
+
+```{r Random Forests, eval=TRUE, cache=TRUE}
+library(randomForest)
+mod_rf <- train(classe ~ ., method="rf", data=ptraining, trControl=trainControl(method="cv", number=5, allowParallel=TRUE), verbose=FALSE)
+mod_rf
+```
+
+```{r, echo=FALSE}
+mod_rf
+```
+Using Random Forests, it has been identified that the optimal number of predictors is 2 with accuracy of ~99% (although, there is little difference between mtry=2 and mtry=27). 
+
+```{r}
+predict_rf <- predict(mod_rf, ptest)
+confMat_rf <- confusionMatrix(ptest$classe, predict_rf)
+confMat_rf$table
+confMat_rf$overall[1]
+```
+The resulting overall accuracy of the prediction is ~99%.
+
+###Using Boosting
+```{r Boosting, cache=TRUE}
+library(gbm)
+mod_gbm <- train(classe ~ ., method="gbm", data=ptraining, verbose=FALSE)
+mod_gbm
+```
+Meanwhile, using Boosting, the identified optimal number of trees is 150 with accuracy of ~95%.
+
+```{r}
+predict_gbm <- predict(mod_gbm, ptest)
+confMat_gbm <- confusionMatrix(ptest$classe, predict_gbm)
+confMat_gbm$table
+confMat_gbm$overall[1]
+```
+The resulting overall accuracy of the prediction using Boosting method is ~96%.
+
+Since the accuracy of the model built using Random Forests method is already high, the combined classifier approach was skipped. It has been settled that the `mod_rf` model is the best fit for the HAR dataset.
+
+## Applying to Test Data
+The prediction model was also applied to the testData consisting of 20 observations. Following is the result of the prediction:
+
+```{r Prediction on Test Data}
+predictTest <- predict(mod_rf, pTestData)
+predictTest
+```
+
+##References
+
+* Ugulino, W.; Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. Wearable Computing: Accelerometers' Data Classification of Body Postures and Movements. Proceedings of 21st Brazilian Symposium on Artificial Intelligence. Advances in Artificial Intelligence - SBIA 2012. In: Lecture Notes in Computer Science. , pp. 52-61. Curitiba, PR: Springer Berlin / Heidelberg, 2012. ISBN 978-3-642-34458-9. DOI: 10.1007/978-3-642-34459-6_6. 
+
+* Bellier, J, Coursera - Practical Machine Learning Project, 2017, retrieved from http://www.rpubs.com/jlbellier/245694
+
+* cchmusso, Practical Machine Learning - Course Project, 2016, retrieved from https://rpubs.com/clairouuu/pml
